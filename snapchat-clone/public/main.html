@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Snapchat Clone - Main</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-['Roboto'] min-h-screen flex flex-col">
+  <header class="bg-yellow-400 p-4 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-white">Snapchat Clone</h1>
+    <button id="logoutBtn" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded">Logout</button>
+  </header>
+
+  <main class="flex flex-1 overflow-hidden">
+    <aside class="w-64 bg-white p-4 overflow-y-auto border-r border-gray-300">
+      <h2 class="text-xl font-semibold mb-4">Friends</h2>
+      <ul id="friendsList" class="space-y-2">
+        <!-- Friends will be listed here -->
+      </ul>
+      <div class="mt-6">
+        <input type="text" id="addFriendInput" placeholder="Add friend username" class="w-full px-3 py-2 border border-gray-300 rounded" />
+        <button id="addFriendBtn" class="mt-2 w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded">Add Friend</button>
+      </div>
+      <div class="mt-6">
+        <h3 class="text-lg font-semibold mb-2">Streaks</h3>
+        <ul id="streaksList" class="space-y-1 text-yellow-700 font-semibold">
+          <!-- Streaks will be listed here -->
+        </ul>
+      </div>
+    </aside>
+
+    <section class="flex-1 p-4 overflow-y-auto">
+      <h2 class="text-xl font-semibold mb-4">Stories</h2>
+      <div id="storiesContainer" class="flex space-x-4 overflow-x-auto mb-6">
+        <!-- Stories will be displayed here -->
+      </div>
+
+      <h2 class="text-xl font-semibold mb-4">Upload Video</h2>
+      <form id="uploadForm" class="mb-6">
+        <input type="file" id="videoInput" accept="video/*" class="mb-2" />
+        <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">Upload</button>
+      </form>
+
+      <h2 class="text-xl font-semibold mb-4">Chat</h2>
+      <div id="chatContainer" class="border border-gray-300 rounded p-4 h-64 flex flex-col">
+        <div id="chatMessages" class="flex-1 overflow-y-auto mb-2"></div>
+        <form id="chatForm" class="flex">
+          <input type="text" id="chatInput" placeholder="Type a message..." class="flex-1 border border-gray-300 rounded-l px-3 py-2" />
+          <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-r">Send</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const token = localStorage.getItem('token');
+    const username = localStorage.getItem('username');
+    if (!token || !username) {
+      window.location.href = 'index.html';
+    }
+
+    const logoutBtn = document.getElementById('logoutBtn');
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      window.location.href = 'index.html';
+    });
+
+    // Placeholder data and functions for demo
+    const friendsList = document.getElementById('friendsList');
+    const streaksList = document.getElementById('streaksList');
+    const storiesContainer = document.getElementById('storiesContainer');
+    const uploadForm = document.getElementById('uploadForm');
+    const videoInput = document.getElementById('videoInput');
+    const chatContainer = document.getElementById('chatContainer');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatForm = document.getElementById('chatForm');
+    const chatInput = document.getElementById('chatInput');
+    const addFriendInput = document.getElementById('addFriendInput');
+    const addFriendBtn = document.getElementById('addFriendBtn');
+
+    // WebSocket setup
+    const ws = new WebSocket(`ws://${window.location.host}`);
+
+    ws.onopen = () => {
+      console.log('WebSocket connected');
+    };
+
+    ws.onmessage = (event) => {
+      const msg = document.createElement('div');
+      msg.textContent = event.data;
+      chatMessages.appendChild(msg);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    };
+
+    chatForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const message = chatInput.value.trim();
+      if (message) {
+        ws.send(`${username}: ${message}`);
+        chatInput.value = '';
+      }
+    });
+
+    // Demo friend list and streaks
+    let friends = [];
+    let streaks = {};
+
+    function renderFriends() {
+      friendsList.innerHTML = '';
+      friends.forEach(friend => {
+        const li = document.createElement('li');
+        li.textContent = friend;
+        friendsList.appendChild(li);
+      });
+    }
+
+    function renderStreaks() {
+      streaksList.innerHTML = '';
+      for (const friend in streaks) {
+        const li = document.createElement('li');
+        li.textContent = `${friend}: ${streaks[friend]} days`;
+        streaksList.appendChild(li);
+      }
+    }
+
+    addFriendBtn.addEventListener('click', () => {
+      const newFriend = addFriendInput.value.trim();
+      if (newFriend && !friends.includes(newFriend)) {
+        friends.push(newFriend);
+        streaks[newFriend] = 0;
+        renderFriends();
+        renderStreaks();
+        addFriendInput.value = '';
+      }
+    });
+
+    // Demo stories
+    function renderStories() {
+      storiesContainer.innerHTML = '';
+      friends.forEach(friend => {
+        const storyDiv = document.createElement('div');
+        storyDiv.className = 'w-24 h-24 bg-yellow-300 rounded-full flex items-center justify-center text-white font-bold cursor-pointer';
+        storyDiv.textContent = friend;
+        storiesContainer.appendChild(storyDiv);
+      });
+    }
+
+    renderFriends();
+    renderStreaks();
+    renderStories();
+
+    // Video upload handler (demo only)
+    uploadForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (videoInput.files.length === 0) {
+        alert('Please select a video to upload.');
+        return;
+      }
+      alert('Video upload functionality to be implemented.');
+      videoInput.value = '';
+    });
+  </script>
+</body>
+</html>
