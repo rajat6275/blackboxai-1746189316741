@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Snapchat Clone - Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-500 min-h-screen flex items-center justify-center font-['Roboto']">
+  <div class="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+    <h1 class="text-3xl font-bold mb-6 text-center text-yellow-600">Snapchat Clone</h1>
+    <form id="loginForm" class="space-y-4">
+      <div>
+        <label for="username" class="block text-gray-700 font-semibold mb-1">Username</label>
+        <input type="text" id="username" name="username" required class="w-full px-3 py-2 border border-yellow-400 rounded focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+      </div>
+      <div>
+        <label for="password" class="block text-gray-700 font-semibold mb-1">Password</label>
+        <input type="password" id="password" name="password" required class="w-full px-3 py-2 border border-yellow-400 rounded focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+      </div>
+      <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 rounded transition duration-300">Login</button>
+    </form>
+    <p class="mt-4 text-center text-gray-600">Don't have an account? <a href="#" id="showSignup" class="text-yellow-600 font-semibold hover:underline">Sign up</a></p>
+  </div>
+
+  <div id="signupContainer" class="hidden bg-white rounded-lg shadow-lg p-8 max-w-md w-full mt-6">
+    <h1 class="text-3xl font-bold mb-6 text-center text-yellow-600">Sign Up</h1>
+    <form id="signupForm" class="space-y-4">
+      <div>
+        <label for="newUsername" class="block text-gray-700 font-semibold mb-1">Username</label>
+        <input type="text" id="newUsername" name="newUsername" required class="w-full px-3 py-2 border border-yellow-400 rounded focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+      </div>
+      <div>
+        <label for="newPassword" class="block text-gray-700 font-semibold mb-1">Password</label>
+        <input type="password" id="newPassword" name="newPassword" required class="w-full px-3 py-2 border border-yellow-400 rounded focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+      </div>
+      <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 rounded transition duration-300">Sign Up</button>
+    </form>
+    <p class="mt-4 text-center text-gray-600">Already have an account? <a href="#" id="showLogin" class="text-yellow-600 font-semibold hover:underline">Login</a></p>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const signupContainer = document.getElementById('signupContainer');
+    const showSignup = document.getElementById('showSignup');
+    const showLogin = document.getElementById('showLogin');
+
+    showSignup.addEventListener('click', (e) => {
+      e.preventDefault();
+      signupContainer.classList.remove('hidden');
+      loginForm.parentElement.classList.add('hidden');
+    });
+
+    showLogin.addEventListener('click', (e) => {
+      e.preventDefault();
+      signupContainer.classList.add('hidden');
+      loginForm.parentElement.classList.remove('hidden');
+    });
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      if (!username || !password) {
+        alert('Please enter username and password.');
+        return;
+      }
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('username', username);
+          window.location.href = 'main.html';
+        } else {
+          alert(data.error || 'Login failed');
+        }
+      } catch (error) {
+        alert('Error connecting to server');
+      }
+    });
+
+    signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('newUsername').value.trim();
+      const password = document.getElementById('newPassword').value.trim();
+      if (!username || !password) {
+        alert('Please enter username and password.');
+        return;
+      }
+      try {
+        const response = await fetch('/api/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          alert('Signup successful. Please login.');
+          signupContainer.classList.add('hidden');
+          loginForm.parentElement.classList.remove('hidden');
+        } else {
+          alert(data.error || 'Signup failed');
+        }
+      } catch (error) {
+        alert('Error connecting to server');
+      }
+    });
+  </script>
+</body>
+</html>
